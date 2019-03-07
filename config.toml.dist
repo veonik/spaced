@@ -1,0 +1,22 @@
+# Filesystem options
+[fs]
+# Path to monitor for new files
+#monitor_path = "~/Desktop"
+
+# S3 storage options
+[s3]
+# S3-compatible endpoint, host only
+endpoint = "s3.us-east-2.amazonaws.com"
+access_key = "aws access key id"
+secret_key = "aws secret key"
+# Images will be stored in this bucket only
+bucket = "aws bucket"
+# Images will have this prefix (treated as a path prefix)
+#prefix = ""
+
+# URL shortener options
+[url.options]
+# Fully qualified path to eok.vin service's create URL endpoint
+endpoint = "https://eok.vin/new"
+# Plaintext secret token for eok.vin service
+token = "super secret eok.vin token"
