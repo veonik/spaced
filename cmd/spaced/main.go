@@ -143,10 +143,10 @@ func worker(stop chan struct{}) {
 			case event.Op&fsnotify.Create == fsnotify.Create:
 				f := filepath.Base(event.Name)
 				if strings.HasPrefix(f, ".") {
-					log.Println("new file created, not uploading:", f)
+					//log.Println("new file created, not uploading:", f)
 					continue
 				} else if !strings.HasSuffix(f, ".png") {
-					log.Println("non png created, not uploading:", f)
+					//log.Println("non png created, not uploading:", f)
 					continue
 				}
 				_, err := s3.FPutObject(f, event.Name)
@@ -165,9 +165,9 @@ func worker(stop chan struct{}) {
 					log.Println("error getting short share url:", err.Error())
 					continue
 				}
-				log.Printf("Share URL: %s\t(valid until %s)\n",
+				log.Printf("Share URL: %s (valid until %s)\n",
 					su.String(),
-					time.Now().Add(time.Duration(config.ShareTTL)).Format("Jan 02 15:02 MST"))
+					time.Now().Add(time.Duration(config.ShareTTL)).Format("Jan 02 15:04 MST"))
 				cmd := exec.Command("pbcopy")
 				p, err := cmd.StdinPipe()
 				if err != nil {
