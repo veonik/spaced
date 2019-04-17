@@ -17,11 +17,23 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+type duration time.Duration
+
+func (d *duration) UnmarshalText(text []byte) error {
+	dur, err := time.ParseDuration(string(text))
+	if err != nil {
+		return err
+	}
+	*d = duration(dur)
+	return nil
+}
 
 var config struct {
 	S3 s3Config `toml:"s3"`
 	URL urlShortenerConfig `toml:"url"`
 	FS fswatchConfig `toml:"fswatch"`
+
+	ShareTTL duration `toml:"share_ttl"`
 
 	LogFile string
 }
@@ -34,7 +46,7 @@ func init() {
 		fmt.Println()
 		fmt.Println("Command spaced automatically uploads screenshots and puts a shareable URL in")
 		fmt.Println("the system clipboard. The screenshots are uploaded to an S3-compatible bucket,")
-		fmt.Println("and eokvin as a URL shortening service.")
+		fmt.Println("and eokvin is used as a URL shortening service.")
 		fmt.Println()
 		fmt.Println("spaced works with an S3-compatible storage, such as DigitalOcean Spaces.")
 		fmt.Println()
@@ -142,18 +154,20 @@ func worker(stop chan struct{}) {
 					log.Println("error writing to storage:", err.Error())
 					continue
 				}
-				u, err := s3.PresignedGetObject(f, 30*time.Minute, url.Values{})
+				u, err := s3.PresignedGetObject(f, time.Duration(config.ShareTTL), url.Values{})
 				if err != nil {
 					log.Println("error getting public aws url:", err.Error())
 					continue
 				}
 				log.Println("AWS URL:", u.String())
-				su, err := c.NewShortURL(u)
+				su, err := c.NewShortURL(u, time.Duration(config.ShareTTL))
 				if err != nil {
 					log.Println("error getting short share url:", err.Error())
 					continue
 				}
-				log.Println("Share URL:", su.String())
+				log.Printf("Share URL: %s\t(valid until %s)\n",
+					su.String(),
+					time.Now().Add(time.Duration(config.ShareTTL)).Format("Jan 02 15:02 MST"))
 				cmd := exec.Command("pbcopy")
 				p, err := cmd.StdinPipe()
 				if err != nil {

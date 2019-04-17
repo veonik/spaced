@@ -1,3 +1,6 @@
+# Shared items expire after this duration
+share_ttl = "16h"
+
 # Filesystem options
 [fs]
 # Path to monitor for new files
